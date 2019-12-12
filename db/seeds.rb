@@ -62,7 +62,6 @@ harrison_barnes = 'https://www.balldontlie.io/api/v1/stats/?seasons[]=2018&playe
 #     end
 # end
 
-counter = 2019
 ast = 0
 blk = 0
 dreb = 0
@@ -79,7 +78,9 @@ reb = 0
 stl = 0
 turnover = 0
 
-arr = Player.all.limit(500)
+# arr = Player.all.limit(1)
+
+# arr = Player.all.find(237).to_a
 
 
 
@@ -88,11 +89,11 @@ arr = Player.all.limit(500)
 
 # map over the first 500 players and for each player map over all 41 seasons by year (1979-2019)
 # a single fetch will return all the games of a season
+#    sort the array of GAME objects, from first game to last game
 #   if the data returned is empty, dont do anything and make the next fetch for the next year (of same player)
 #   if the data returned exists, iterate through each game while adding up the total to the counter
-#    sort the array of GAME objects, from first game to last game
 #    if the next GAME's TEAM_ID does not match the current one, create a PLAYER_STAT instance with the PLAYER.ID and TEAM_SEASON.ID matching the current SEASON.YEAR and TEAM.ID
-#    , then keep going
+#    ,then reset the counters and move on to the next GAME
 #   when you reach the end of a season, create a PLAYER_STAT instance with the PLAYER.ID and TEAM_SEASON.ID matching the current SEASON.YEAR and TEAM.ID
 
 # ----------------------------------------------------------------------------------------------------------------------------------
@@ -100,19 +101,74 @@ arr = Player.all.limit(500)
 # I can (both DATE or ID)
 # -----------------------------------------------------------------------------------------------------------------------------------
 
-arr.each do |player|
-    Season.all each do |season|
+# arr.each do |player|
+    Season.all.each do |season|
         request = RestClient::Request.execute(
             method: :get,
-            url: "https://www.balldontlie.io/api/v1/stats/?per_page=100&seasons[]=#{season.id}&player_ids[]=#{player.id}&postseason=false"
+            url: "https://www.balldontlie.io/api/v1/stats/?seasons[]=#{season.id}&player_ids[]=237&postseason=false&per_page=85"
         )
         response = JSON.parse(request)
         games = response["data"]
-        games.each do |game|
-            
-        end
+
+        games = games.sort_by { |game| game["game"]["id"]}
+
+        if games == [] 
+            break
+        else
+            games.each_cons(2) do |game, next_game|
+                if game["team"]["id"] == next_game["team"]["id"]
+                    ast += game["ast"] if game["ast"]
+                    blk += game["blk"] if game["blk"]
+                    dreb += game["dreb"] if game["dreb"]
+                    fg3a += game["fg3a"] if game["fg3a"]
+                    fg3m += game["fg3m"] if game["fg3m"]
+                    fga += game["fga"] if game["fga"]
+                    ftm += game["ftm"] if game["ftm"]
+                    fta += game["fta"] if game["fta"]
+                    oreb += game["oreb"] if game["oreb"]
+                    pf += game["pf"] if game["pf"]
+                    pts += game["pts"] if game["pts"]
+                    reb += game["reb"] if game["reb"]
+                    stl += game["stl"] if game["stl"]
+                    turnover += game["turnover"] if game["turnover"]
+                else
+                    PlayerStat.create(player: player, team_season: TeamSeason.find_by({season: season.id, team: game["team"]["id"]}), ast: ast, blk: blk, dreb: dreb, fg3a: fg3a, fg3m: fg3m, fga: fga, fgm: fgm, fta: fta, ftm: ftm, oreb: oreb, pf: pf, pts: pts, reb: reb, stl: stl, turnover: turnover)
+                    ast = 0
+                    blk = 0
+                    dreb = 0
+                    fg3a = 0
+                    fg3m = 0
+                    fga = 0
+                    fgm = 0
+                    fta = 0
+                    ftm = 0
+                    oreb = 0
+                    pf = 0
+                    pts = 0
+                    reb = 0
+                    stl = 0
+                    turnover = 0
+                end
+            end
+            PlayerStat.create(player: player, team_season: TeamSeason.find_by({season: season.id, team: games.last["team"]["id"]}), ast: ast, blk: blk, dreb: dreb, fg3a: fg3a, fg3m: fg3m, fga: fga, fgm: fgm, fta: fta, ftm: ftm, oreb: oreb, pf: pf, pts: pts, reb: reb, stl: stl, turnover: turnover)
+            ast = 0
+            blk = 0
+            dreb = 0
+            fg3a = 0
+            fg3m = 0
+            fga = 0
+            fgm = 0
+            fta = 0
+            ftm = 0
+            oreb = 0
+            pf = 0
+            pts = 0
+            reb = 0
+            stl = 0
+            turnover = 0
+        end 
     end
-end
+# end
 
 # while counter > 1979 do
 #     request = RestClient::Request.execute(

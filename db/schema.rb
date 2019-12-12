@@ -27,7 +27,7 @@ ActiveRecord::Schema.define(version: 2019_12_11_222210) do
     t.integer "fgm"
     t.integer "fta"
     t.integer "ftm"
-    t.integer "ored"
+    t.integer "oreb"
     t.integer "pf"
     t.integer "pts"
     t.integer "reb"

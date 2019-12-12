@@ -12,7 +12,7 @@ class CreatePlayerStats < ActiveRecord::Migration[6.0]
       t.integer :fgm 
       t.integer :fta
       t.integer :ftm
-      t.integer :ored
+      t.integer :oreb
       t.integer :pf
       t.integer :pts 
       t.integer :reb 
